@@ -43,7 +43,11 @@
   var boxl;
   var boxr;
   var spinningWheel;
+  var wheelSpins = false;
   var rotAngle = 0;
+  var rotSpeed = 20;
+  var colors;
+  var probabilities;
   var menubar = [];
   var lvlText = "1";
   var level = 0; 
@@ -118,6 +122,10 @@ function queueComplete(event) {
   stage.addChild(contr);
 
   spinningWheel = new createjs.Shape();
+  spinningWheel.addEventListener('click',function (){
+    rotSpeed = 10+Math.floor(Math.random()*30);
+    wheelSpins = true;
+  });
   contl.addChild(spinningWheel);
 
   stage.update();
@@ -128,6 +136,19 @@ function queueComplete(event) {
 }
 
 function initLevel(newLevel) {
+  /*Levels
+   *0 -> colors:        ['orange','lightgreen']
+   *  -> probabilities: [75,25]*/
+  level = newLevel;
+  levelColors = [['orange','lightgreen'],
+                 ['orange','lightgreen','aquamarine'],
+                ];
+  levelProbabilities = [[75,25],
+                        [33.33,33.33,33.34],
+                ];
+  colors = levelColors[newLevel];
+  probabilities = levelProbabilities[newLevel];
+  resize();
 }
 
 function resize() {
@@ -199,25 +220,24 @@ function resize() {
   contl.x = boxl.x + margin;
   contl.y = boxl.y + margin;
  
-
-  drawSpinningWheel(boxWidth/2,boxHeight/2,boxWidth/2-2*margin,['aquaMarine','orange'],[25,75]);
+  spinningWheel.x = boxWidth/2 - margin;
+  spinningWheel.y = boxHeight/2 - 2*margin;
+  //colors and probabilities are set in initLevel
+  drawSpinningWheel(boxWidth/2-2*margin,colors,probabilities);
   stage.update();
 }
 
 
-function drawSpinningWheel(x,y,r,colors,probabilities){
+function drawSpinningWheel(r,colors,probabilities){
   var startAngle = 0;
-  var drawingAngle = 0;
   var endAngle = 0;
   spinningWheel.graphics.clear();
-  spinningWheel.x = x;
-  spinningWheel.y = y;
   for (var i = 0; i<colors.length; i++){
+    console.log(2*Math.PI*probabilities[i]/100);
     endAngle = startAngle + 2*Math.PI*probabilities[i]/100;
-    
     spinningWheel.graphics.beginFill(colors[i]).arc(0,0,r,startAngle,endAngle);
     spinningWheel.graphics.lt(0,0);
-    startAngle += endAngle; //for next arc
+    startAngle = endAngle; //for next arc
   }
 }
 
@@ -238,9 +258,14 @@ function onMenuNext(event) {
   initLevel((level+1) % 5);
 }
 function tick(){
-  
-  rotAngle = (rotAngle + 1) % 360;
-  spinningWheel.rotation = rotAngle;
+  if (wheelSpins){
+    rotSpeed -= 0.2;
+    rotAngle = (rotAngle + rotSpeed) % 360;
+    spinningWheel.rotation = rotAngle;
+    if (rotSpeed < 0.1){
+      wheelSpins = false;
+    }
+  }
   stage.update();
 }
 </script>
