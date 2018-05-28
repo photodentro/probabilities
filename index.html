@@ -6,8 +6,9 @@
   <!-- Using this metatag users can't scale the page using pinchIn/out gestures on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <title>Τροχός της τύχης - Πιθανότητες</title> 
-  <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>
-  
+  <!--REMEMEBER TO RESTORE
+  <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>-->
+  <script src="createjs-2015.11.26.min.js"></script>  
   <style type="text/css">
     /* Remove margins and HTML scrollbars */
     body, html  {
@@ -41,16 +42,20 @@
   var winratio;
   var boxl;
   var boxr;
+  var boxHeight;
+  var boxWidth;
   var spinningWheel;
   var wheelSpins = false;
   var rotAngle = 0;
   var rotSpeed = 20;
+  var triangleMark;
   var colors;
   var probabilities;
   var menubar = [];
   var lvlText = "1";
   var level = 0; 
   var bg;
+  var chartData = [];
 
 
   function init(){
@@ -126,6 +131,9 @@ function queueComplete(event) {
     wheelSpins = true;
   });
   contl.addChild(spinningWheel);
+  triangleMark = new createjs.Shape();
+  contl.addChild(triangleMark);
+  contl.setChildIndex(contl.numChildren - 1);
 
   stage.update();
   initLevel(0);
@@ -147,6 +155,10 @@ function initLevel(newLevel) {
                 ];
   colors = levelColors[newLevel];
   probabilities = levelProbabilities[newLevel];
+  chartData = [];
+  for (var i = 0; i<colors.length; i++){
+    chartData.push(0);
+  }
   resize();
 }
 
@@ -196,8 +208,8 @@ function resize() {
   //begin boxes
   margin = stage.canvas.width/100;
   var x_available = stage.canvas.width - (5*margin+margin+5*margin);
-  var boxWidth = x_available/2;
-  var boxHeight = stage.canvas.height - bbs - bbm - margin;
+  boxWidth = x_available/2;
+  boxHeight = stage.canvas.height - bbs - bbm - margin;
   boxl.x = 5*margin;
   boxl.y = margin;
   boxl.alpha = 0.5;
@@ -223,6 +235,11 @@ function resize() {
   spinningWheel.y = boxHeight/2 - 2*margin;
   //colors and probabilities are set in initLevel
   drawSpinningWheel(boxWidth/2-2*margin,colors,probabilities);
+
+  triangleMark.graphics.clear();
+  triangleMark.x = spinningWheel.x;
+  triangleMark.y = contl.y - margin;
+  triangleMark.graphics.beginStroke('black').beginFill('black').moveTo(-margin,0).lineTo(margin,0).lineTo(0,margin).lineTo(-margin,0).closePath();
   stage.update();
 }
 
@@ -232,13 +249,14 @@ function drawSpinningWheel(r,colors,probabilities){
   var endAngle = 0;
   spinningWheel.graphics.clear();
   for (var i = 0; i<colors.length; i++){
-    console.log(2*Math.PI*probabilities[i]/100);
     endAngle = startAngle + 2*Math.PI*probabilities[i]/100;
     spinningWheel.graphics.beginFill(colors[i]).arc(0,0,r,startAngle,endAngle);
     spinningWheel.graphics.lt(0,0);
     startAngle = endAngle; //for next arc
   }
 }
+
+
 
 
 function onMenuHelp(event) {
@@ -256,6 +274,35 @@ function onMenuPrevious(event) {
 function onMenuNext(event) {
   initLevel((level+1) % 5);
 }
+
+function colorIndex(){
+  var nextDegree = 0;
+  for (var i=0; i<colors.length; i++){
+    nextDegree + probabilities[i]*360/100;
+    nextDegree += probabilities[i]*360/100;
+    if (spinningWheel.rotation<nextDegree){
+      return(i);
+    }
+  }
+}
+function updateChart(){
+  var ci = colorIndex();
+  chartData[ci] += 1;
+  rectangles = [];
+  for (var i=0; i<colors.length; i++){
+    rectangles.push([]);
+    for (var j=0; j<chartData[ci]; j++){
+      aRect = new createjs.Shape();
+      rectangles[i].push(aRect);
+      contr.addChild(rectangles[i][j]);
+      console.log(rectangles[i][j]);
+      rectangles[i][j].graphics.beginFill(colors[i]).drawRoundRect(boxr.x,100,boxHeight,100,5);
+    }
+  }
+  console.log(rectangles);
+  stage.update();
+}
+
 function tick(){
   if (wheelSpins){
     rotSpeed -= 0.2;
@@ -263,6 +310,7 @@ function tick(){
     spinningWheel.rotation = rotAngle;
     if (rotSpeed < 0.1){
       wheelSpins = false;
+      updateChart();
     }
   }
   stage.update();
