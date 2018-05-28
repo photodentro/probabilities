@@ -104,6 +104,17 @@ function queueComplete(event) {
   lvlText.textBaseline = "middle";
   stage.addChild(lvlText);
 
+  //begin two boxes
+  boxl = new createjs.Shape();
+  stage.addChild(boxl);
+  contl = new createjs.Container();
+  stage.addChild(contl);
+
+  boxr = new createjs.Shape();
+  stage.addChild(boxr);
+  contr = new createjs.Container();
+  stage.addChild(contr);
+
   stage.update();
   initLevel(0);
   resize();
@@ -153,6 +164,34 @@ function resize() {
   // Fill all the canvas with the background
   bg.scaleX = stage.canvas.width / bg.image.width;
   bg.scaleY = stage.canvas.height / bg.image.height;
+
+
+
+  //begin boxes
+  margin = stage.canvas.width/100;
+  var x_available = stage.canvas.width - (5*margin+margin+5*margin);
+  var boxWidth = x_available/2;
+  boxl.x = 5*margin;
+  boxl.y = margin;
+  boxl.alpha = 0.5;
+  boxl.graphics.clear();
+  boxl.graphics.beginStroke("#000");
+  boxl.graphics.setStrokeStyle(1);
+  boxl.graphics.beginFill("DarkTurquoise").drawRoundRect(0, 0, boxWidth, 
+    stage.canvas.height - bbs - bbm - margin, margin);
+  contl.x = boxl.x + margin;
+  contl.y = boxl.y + margin;
+ 
+  boxr.x = 5*margin+x_available/2+margin;
+  boxr.y = margin;
+  boxr.alpha = 0.5;
+  boxr.graphics.clear();
+  boxr.graphics.beginStroke("#000");
+  boxr.graphics.setStrokeStyle(1);
+  boxr.graphics.beginFill("OrangeRed").drawRoundRect(0, 0 , boxWidth, stage.canvas.height - bbs - bbm - margin, margin);
+  contl.x = boxl.x + margin;
+  contl.y = boxl.y + margin;
+ 
   stage.update();
 }
 
