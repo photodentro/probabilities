@@ -46,8 +46,7 @@
   var boxWidth;
   var spinningWheel;
   var wheelSpins = false;
-  var rotAngle = 0;
-  var rotSpeed = 20;
+  var rotSpeed = 5;
   var triangleMark;
   var colors;
   var probabilities;
@@ -56,7 +55,7 @@
   var level = 0; 
   var bg;
   var chartData = [];
-
+  var rectangles = [];
 
   function init(){
     console.clear();
@@ -149,9 +148,11 @@ function initLevel(newLevel) {
   level = newLevel;
   levelColors = [['orange','lightgreen'],
                  ['orange','lightgreen','aquamarine'],
+                 ['red','green','blue','yellow','pink','lightgreen','lightblue','magenta'],
                 ];
   levelProbabilities = [[75,25],
                         [33.33,33.33,33.34],
+                        [12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,],
                 ];
   colors = levelColors[newLevel];
   probabilities = levelProbabilities[newLevel];
@@ -159,6 +160,7 @@ function initLevel(newLevel) {
   for (var i = 0; i<colors.length; i++){
     chartData.push(0);
   }
+  wheelSpins = false;
   resize();
 }
 
@@ -235,7 +237,7 @@ function resize() {
   spinningWheel.y = boxHeight/2 - 2*margin;
   //colors and probabilities are set in initLevel
   drawSpinningWheel(boxWidth/2-2*margin,colors,probabilities);
-
+  drawChart();
   triangleMark.graphics.clear();
   triangleMark.x = spinningWheel.x;
   triangleMark.y = contl.y - margin;
@@ -248,6 +250,10 @@ function drawSpinningWheel(r,colors,probabilities){
   var startAngle = 0;
   var endAngle = 0;
   spinningWheel.graphics.clear();
+  spinningWheel.rotation = 270;//turns wheel towards triangle
+  /*spinningWheel.graphics.beginFill('black').arc(0,0,r,0,2*Math.PI*2/100);
+  spinningWheel.graphics.lt(0,0);*/
+  
   for (var i = 0; i<colors.length; i++){
     endAngle = startAngle + 2*Math.PI*probabilities[i]/100;
     spinningWheel.graphics.beginFill(colors[i]).arc(0,0,r,startAngle,endAngle);
@@ -276,41 +282,56 @@ function onMenuNext(event) {
 }
 
 function colorIndex(){
+  console.log("inhere");
   var nextDegree = 0;
+  console.log(spinningWheel.rotation);
+  console.log(spinningWheel.rotation%360);
+  console.log(270 - spinningWheel.rotation%360);
+  var adjustedRotation =  270 - spinningWheel.rotation%360;
+  if (adjustedRotation < 0){
+    adjustedRotation+=360;
+  }
+  
   for (var i=0; i<colors.length; i++){
-    nextDegree + probabilities[i]*360/100;
     nextDegree += probabilities[i]*360/100;
-    if (spinningWheel.rotation<nextDegree){
+    if (adjustedRotation<nextDegree){
+      console.log(colors[i]);
       return(i);
     }
   }
 }
-function updateChart(){
-  var ci = colorIndex();
-  chartData[ci] += 1;
+function drawChart(){
+  for (var i=0; i<rectangles.length; i++){
+      for (var j=0; j<rectangles[i].length; j++){
+        rectangles[i][j].graphics.clear();
+    }
+  }
+  stage.update();
   rectangles = [];
   for (var i=0; i<colors.length; i++){
     rectangles.push([]);
-    for (var j=0; j<chartData[ci]; j++){
-      aRect = new createjs.Shape();
-      rectangles[i].push(aRect);
+    for (var j=0; j<chartData[i]; j++){
+      rectangles[i][j] = new createjs.Shape();
       contr.addChild(rectangles[i][j]);
-      console.log(rectangles[i][j]);
-      rectangles[i][j].graphics.beginFill(colors[i]).drawRoundRect(boxr.x,100,boxHeight,100,5);
+      var rectWidth = (boxWidth-margin*(colors.length+1))/colors.length;
+      var rectHeight = boxHeight/15 - 15;
+      var rectX = boxr.x+margin+i*(rectWidth+margin);
+      var rectY = boxr.y+boxHeight - (j+1)*(rectHeight+1);
+      rectangles[i][j].graphics.beginFill(colors[i]).drawRoundRect(rectX,rectY,rectWidth,rectHeight,2);
     }
   }
-  console.log(rectangles);
   stage.update();
 }
 
 function tick(){
   if (wheelSpins){
-    rotSpeed -= 0.2;
-    rotAngle = (rotAngle + rotSpeed) % 360;
-    spinningWheel.rotation = rotAngle;
+    rotSpeed -= 1;
+    spinningWheel.rotation = spinningWheel.rotation+rotSpeed;
     if (rotSpeed < 0.1){
       wheelSpins = false;
-      updateChart();
+      var ci = colorIndex();
+      chartData[ci] += 1;
+      drawChart();
     }
   }
   stage.update();
