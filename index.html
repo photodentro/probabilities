@@ -6,9 +6,7 @@
   <!-- Using this metatag users can't scale the page using pinchIn/out gestures on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <title>Τροχός της τύχης - Πιθανότητες</title> 
-  <!--REMEMEBER TO RESTORE
-  <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>-->
-  <script src="createjs-2015.11.26.min.js"></script>  
+  <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>
   <style type="text/css">
     /* Remove margins and HTML scrollbars */
     body, html  {
@@ -35,7 +33,7 @@
   </canvas>
 <script>
   var stage;
-  var resourceNames = ["background","bar_help","bar_home", "bar_previous", "bar_next"];
+  var resourceNames = ["background.svg","bar_help.svg","bar_home.svg", "bar_edit.svg"];
   var resourcesLoaded = 0;
   var resources = [];
   var ratio = 16/9;
@@ -46,13 +44,14 @@
   var boxWidth;
   var spinningWheel;
   var wheelSpins = false;
-  var rotSpeed = 5;
+  //rotation speed starts from init and 
+  //decreases by step steps
+  var rotConfig = {'init':10,'stretch':1};
+  var rotSpeed;
   var triangleMark;
   var colors;
   var probabilities;
   var menubar = [];
-  var lvlText = "1";
-  var level = 0; 
   var bg;
   var chartData = [];
   var rectangles = [];
@@ -66,7 +65,7 @@
     for (var i = 0; i < resourceNames.length; i++) {
 
       resources[i] = new Image();
-      resources[i].src = "resource/" + resourceNames[i] + ".svg";
+      resources[i].src = "resource/" + resourceNames[i];
       resources[i].onload = queueFileLoad;
 
     }
@@ -87,13 +86,13 @@ function queueFileLoad(event) {
 
 function queueComplete(event) {
   console.log("Finished loading resources");
-  bg = new createjs.Bitmap(imgByName("background"));
+  bg = new createjs.Bitmap(imgByName("background.svg"));
   stage.addChild(bg);
   
-  var onMenuClick = [onMenuHelp, onMenuHome, onMenuPrevious, onMenuNext];
-  for (i = 0; i < 4; i++) {
+  var onMenuClick = [onMenuHelp, onMenuHome];
+  for (i = 0; i < 3; i++) {
 
-    menubar[i] = new createjs.Bitmap(resources[resourceNames.indexOf('bar_help')+i]);
+    menubar[i] = new createjs.Bitmap(resources[resourceNames.indexOf('bar_help.svg')+i]);
     menubar[i].addEventListener("click", onMenuClick[i]);
     menubar[i].addEventListener("mouseover", function(event) {
         // Bring the target on top in its container, mostly for the rotation animation
@@ -126,7 +125,10 @@ function queueComplete(event) {
 
   spinningWheel = new createjs.Shape();
   spinningWheel.addEventListener('click',function (){
-    rotSpeed = 10+Math.floor(Math.random()*30);
+    var whatDoIWant = Math.floor(Math.random()*9);
+    var newAngle = 270+360+Math.floor(whatDoIWant)*45;
+    rotConfig = computeSpeed(newAngle);
+    rotSpeed = rotConfig['init'];
     wheelSpins = true;
   });
   contl.addChild(spinningWheel);
@@ -139,6 +141,13 @@ function queueComplete(event) {
   resize();
   window.addEventListener('resize', resize, false);
   createjs.Ticker.on("tick", tick);
+}
+
+function computeSpeed(angle){
+  var initSpeed = 30;
+  totalSteps = initSpeed*(initSpeed+1)/2;
+  var stretch = 1.0*angle/totalSteps;
+  return({'init':initSpeed,'stretch':stretch})
 }
 
 function initLevel(newLevel) {
@@ -178,17 +187,12 @@ function resize() {
 
   var bbm = bbs / 5;  // bar button margin
   // TODO: local/global variables, eslint...
-  for (i = 0; i < 4; i++) {
-    // Leave one space for the level
-    if (i < 3)
-      j = i;
-    else
-      j = i + 1;
+  for (i = 0; i < 3; i++) {
     menubar[i].scaleX = bbs / menubar[i].image.width;
     menubar[i].scaleY = bbs / menubar[i].image.height;
     menubar[i].regX = menubar[i].image.width / 2;
     menubar[i].regY = menubar[i].image.height / 2;
-    menubar[i].x = (j + 1)*bbm + bbs/2 + j*bbs;
+    menubar[i].x = (i + 1)*bbm + bbs/2 + i*bbs;
     menubar[i].y = stage.canvas.height - bbm - bbs/2;
     menubar[i].visible = true;
     // These copies are used to preserve the original scale on mouseover
@@ -196,10 +200,6 @@ function resize() {
     menubar[i].savedscaleY = menubar[i].scaleY;
   }
 
-  lvlText.text = level + 1;
-  lvlText.x = (3 + 1)*bbm + bbs/2 + 3*bbs;
-  lvlText.y = stage.canvas.height - bbm/2 - bbs/2;
-  lvlText.font = parseInt(2*bbs/2) + "px Arial";
 
   // Fill all the canvas with the background
   bg.scaleX = stage.canvas.width / bg.image.width;
@@ -273,20 +273,9 @@ function onMenuHome(event) {
   window.history.back();
 }
 
-function onMenuPrevious(event) {
-  initLevel((level+4) % 5);
-}
-
-function onMenuNext(event) {
-  initLevel((level+1) % 5);
-}
 
 function colorIndex(){
-  console.log("inhere");
   var nextDegree = 0;
-  console.log(spinningWheel.rotation);
-  console.log(spinningWheel.rotation%360);
-  console.log(270 - spinningWheel.rotation%360);
   var adjustedRotation =  270 - spinningWheel.rotation%360;
   if (adjustedRotation < 0){
     adjustedRotation+=360;
@@ -295,7 +284,6 @@ function colorIndex(){
   for (var i=0; i<colors.length; i++){
     nextDegree += probabilities[i]*360/100;
     if (adjustedRotation<nextDegree){
-      console.log(colors[i]);
       return(i);
     }
   }
@@ -313,9 +301,9 @@ function drawChart(){
     for (var j=0; j<chartData[i]; j++){
       rectangles[i][j] = new createjs.Shape();
       contr.addChild(rectangles[i][j]);
-      var rectWidth = (boxWidth-margin*(colors.length+1))/colors.length;
+      var rectWidth = (boxWidth-1*(colors.length+1)-2*margin)/colors.length;
       var rectHeight = boxHeight/15 - 15;
-      var rectX = boxr.x+margin+i*(rectWidth+margin);
+      var rectX = boxr.x+margin+i*(rectWidth+1);
       var rectY = boxr.y+boxHeight - (j+1)*(rectHeight+1);
       rectangles[i][j].graphics.beginFill(colors[i]).drawRoundRect(rectX,rectY,rectWidth,rectHeight,2);
     }
@@ -326,7 +314,7 @@ function drawChart(){
 function tick(){
   if (wheelSpins){
     rotSpeed -= 1;
-    spinningWheel.rotation = spinningWheel.rotation+rotSpeed;
+    spinningWheel.rotation = spinningWheel.rotation+rotSpeed*rotConfig['stretch'];
     if (rotSpeed < 0.1){
       wheelSpins = false;
       var ci = colorIndex();
