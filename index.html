@@ -33,7 +33,7 @@
   </canvas>
 <script>
   var stage;
-  var resourceNames = ["background.svg","bar_help.svg","bar_home.svg", "bar_edit.svg"];
+  var resourceNames = ["background","bar_help","bar_home", "bar_previous","bar_next"];
   var resourcesLoaded = 0;
   var resources = [];
   var ratio = 16/9;
@@ -55,7 +55,8 @@
   var bg;
   var chartData = [];
   var rectangles = [];
-
+  var lvlText;
+  var level;
   function init(){
     console.clear();
     stage = new createjs.Stage("mainCanvas");
@@ -65,7 +66,7 @@
     for (var i = 0; i < resourceNames.length; i++) {
 
       resources[i] = new Image();
-      resources[i].src = "resource/" + resourceNames[i];
+      resources[i].src = "resource/" + resourceNames[i] + ".svg";
       resources[i].onload = queueFileLoad;
 
     }
@@ -86,13 +87,13 @@ function queueFileLoad(event) {
 
 function queueComplete(event) {
   console.log("Finished loading resources");
-  bg = new createjs.Bitmap(imgByName("background.svg"));
+  bg = new createjs.Bitmap(imgByName("background"));
   stage.addChild(bg);
   
-  var onMenuClick = [onMenuHelp, onMenuHome];
-  for (i = 0; i < 3; i++) {
+  var onMenuClick = [onMenuHelp, onMenuHome, onMenuPrevious, onMenuNext];
+  for (i = 0; i < 4; i++) {
 
-    menubar[i] = new createjs.Bitmap(resources[resourceNames.indexOf('bar_help.svg')+i]);
+    menubar[i] = new createjs.Bitmap(resources[resourceNames.indexOf('bar_help')+i]);
     menubar[i].addEventListener("click", onMenuClick[i]);
     menubar[i].addEventListener("mouseover", function(event) {
         // Bring the target on top in its container, mostly for the rotation animation
@@ -187,17 +188,33 @@ function resize() {
 
   var bbm = bbs / 5;  // bar button margin
   // TODO: local/global variables, eslint...
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < 4; i++) {
     menubar[i].scaleX = bbs / menubar[i].image.width;
     menubar[i].scaleY = bbs / menubar[i].image.height;
     menubar[i].regX = menubar[i].image.width / 2;
     menubar[i].regY = menubar[i].image.height / 2;
-    menubar[i].x = (i + 1)*bbm + bbs/2 + i*bbs;
+    if (i < 3)
+      j = i;
+    else
+      j = i + 1;
+    menubar[i].x = (j + 1)*bbm + bbs/2 + j*bbs;
     menubar[i].y = stage.canvas.height - bbm - bbs/2;
     menubar[i].visible = true;
     // These copies are used to preserve the original scale on mouseover
     menubar[i].savedscaleX = menubar[i].scaleX;
     menubar[i].savedscaleY = menubar[i].scaleY;
+  }
+
+
+  lvlText.text = level + 1;
+  lvlText.x = (3 + 1)*bbm + bbs/2 + 3*bbs;
+  lvlText.y = stage.canvas.height - bbm/2 - bbs/2;
+  lvlText.font = parseInt(2*bbs/2) + "px Arial";
+
+  // If level is single digit, move lvlText and bar_previous a bit left
+  if (level + 1 < 10) {
+    lvlText.x -= bbs/4;
+    menubar[3].x -= bbs/2;
   }
 
 
@@ -324,6 +341,19 @@ function tick(){
   }
   stage.update();
 }
+
+function onMenuHome(event) {
+  window.history.back();
+}
+
+function onMenuPrevious(event) {
+  initLevel((level+2) % 3);
+}
+
+function onMenuNext(event) {
+  initLevel((level+1) % 16);
+}
+
 </script>
 </body>
 </html>
