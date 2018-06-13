@@ -33,6 +33,7 @@
   </canvas>
 <script>
   var stage;
+  var statusText;
   var resourceNames = ["background","bar_help","bar_home", "bar_previous","bar_next"];
   var resourcesLoaded = 0;
   var resources = [];
@@ -61,7 +62,11 @@
     console.clear();
     stage = new createjs.Stage("mainCanvas");
     stage.enableMouseOver();
-    
+    statusText = new createjs.Text("Φόρτωση...", "20px Arial", "white");
+    statusText.textAlign = "center";
+    statusText.textBaseline = "middle";
+    stage.addChild(statusText);
+    resize();
     // Resource preloading
     for (var i = 0; i < resourceNames.length; i++) {
 
@@ -80,6 +85,7 @@ function imgByName(name) {
 
 function queueFileLoad(event) {
   resourcesLoaded++;
+  statusText.text = "Φόρτωση " + parseInt(100*resourcesLoaded/resourceNames.length) + " %";
   stage.update();
   if (resourcesLoaded == resourceNames.length)
     queueComplete(event);
@@ -184,6 +190,18 @@ function resize() {
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = stage.canvas.width / ratio;
   }
+  if (!menubar[0]) {
+    statusText.x = stage.canvas.width / 2;
+    statusText.y = stage.canvas.height / 2;
+    statusText.font = parseInt(stage.canvas.height/10) + "px Arial";
+    statusText.visible = true;
+    return;
+  }
+  else{
+    statusText.visible = false;
+  }
+
+
   var bbs = stage.canvas.height / 10;  // bar button size
 
   var bbm = bbs / 5;  // bar button margin
