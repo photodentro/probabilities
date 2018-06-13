@@ -200,6 +200,9 @@ function resize() {
     menubar[i].x = (j + 1)*bbm + bbs/2 + j*bbs;
     menubar[i].y = stage.canvas.height - bbm - bbs/2;
     menubar[i].visible = true;
+    var g = new createjs.Shape();
+    g.graphics.beginFill('#000').drawRect(0,0,menubar[i].image.width*menubar[i].scaleX,menubar[i].image.height*menubar[i].scaleY);
+    menubar[i].hitArea = g;
     // These copies are used to preserve the original scale on mouseover
     menubar[i].savedscaleX = menubar[i].scaleX;
     menubar[i].savedscaleY = menubar[i].scaleY;
@@ -283,7 +286,7 @@ function drawSpinningWheel(r,colors,probabilities){
 
 
 function onMenuHelp(event) {
-  alert("Επιλέξτε εικόνες από το κάτω κουτί και βάλτε τις στο δεξί κουτί έτσι ώστε να ταιριάζουν με το αριστερό κουτί.");
+  alert("Γυρίστε τον τροχό της τύχης και μετρήστε τα αποτελέσματα.");
 }
 
 function onMenuHome(event) {
@@ -351,7 +354,7 @@ function onMenuPrevious(event) {
 }
 
 function onMenuNext(event) {
-  initLevel((level+1) % 16);
+  initLevel((level+1) % 3);
 }
 
 </script>
