@@ -192,6 +192,7 @@ function resize() {
   }
 
   stage.addChild(wheelPointer);//pointer is on top of circle
+  drawGraph();
   stage.update();
 }
 
@@ -243,20 +244,7 @@ function tick(event){
       }
 
       //draw the new graph
-      console.log(bcColors,bcData);
-      bc.graphics.clear();
-      bc.graphics.setStrokeStyle(2).beginStroke('black');
-      for (var i=0; i<bcColors.length; i++){
-        var l = bcColors.length;
-        var barWidth = (stage.canvas.width / 2 - 2 * margin)/l;
-        var barHeight = (stage.canvas.height - bbs - 2*margin) / 10;
-        for (var j=0; j<bcData[i]; j++){
-          bc.graphics.beginFill(bcColors[i]).drawRect(stage.canvas.width / 2 + margin + i*barWidth, margin + (9-j)*barHeight, barWidth, barHeight);
-        }
-      }
-      bc.graphics.endStroke();
-      stage.addChild(bc);
-      stage.update();
+      drawGraph();
     }
     else{    
       rotSpeed -= 0.1;
@@ -306,6 +294,24 @@ function drawSpinningWheel(){
   }
   stage.update();
 }
+
+function drawGraph(){
+	  bc.graphics.clear();
+      bc.graphics.setStrokeStyle(2).beginStroke('black');
+      for (var i=0; i<bcColors.length; i++){
+        var l = bcColors.length;
+        var barWidth = (stage.canvas.width / 2 - 2 * margin)/l;
+        var barHeight = (stage.canvas.height - bbs - 2*margin) / 10;
+        for (var j=0; j<bcData[i]; j++){
+          bc.graphics.beginFill(bcColors[i]).drawRect(stage.canvas.width / 2 + margin + i*barWidth, margin + (9-j)*barHeight, barWidth, barHeight);
+        }
+      }
+      bc.graphics.endStroke();
+      stage.addChild(bc);
+      stage.update();
+
+}
+
 
 </script>
 </body>
