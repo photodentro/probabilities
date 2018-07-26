@@ -1,12 +1,14 @@
 <!doctype html> 
-<!-- Copyright (C) 2018 Alkis Georgopoulos <alkisg@gmail.com>. License: GPLv3. -->
+<!-- Copyright (C) 2018 Alkis Georgopoulos <alkisg@gmail.com>. License: GPf3. -->
 <html lang="el"> 
 <head> 
   <meta charset="UTF-8" />
   <!-- Using this metatag users can't scale the page using pinchIn/out gestures on mobile devices -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-  <title>Τροχός της τύχης - Πιθανότητες</title> 
-  <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>
+  <title>Πιθανότητες</title> 
+  <!--REMEMEBER TO RESTORE
+  <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>-->
+  <script src="createjs-2015.11.26.min.js"></script>  
   <style type="text/css">
     /* Remove margins and HTML scrollbars */
     body, html  {
@@ -33,40 +35,33 @@
   </canvas>
 <script>
   var stage;
-  var statusText;
-  var resourceNames = ["background","bar_help","bar_home", "bar_previous","bar_next"];
+  var resourceNames = ['bar_home', 'bar_help', 'bar_about', 'wheelBase', 'wheelPointer'];
   var resourcesLoaded = 0;
   var resources = [];
   var ratio = 16/9;
   var winratio;
-  var boxl;
-  var boxr;
-  var boxHeight;
-  var boxWidth;
-  var spinningWheel;
-  var wheelSpins = false;
-  //rotation speed starts from init and 
-  //decreases by step steps
-  var rotConfig = {'init':10,'stretch':1};
-  var rotSpeed;
-  var triangleMark;
-  var colors;
-  var probabilities;
   var menubar = [];
   var bg;
-  var chartData = [];
-  var rectangles = [];
-  var lvlText;
-  var level;
+  var wheelBase;
+  var margin;
+  var bbs;
+  var leftBox = new createjs.Shape();
+  var rightBox = new createjs.Shape();
+  var spinningWheel = [];
+  var colors;
+  var wheelColors;
+  var probabilities;
+  var wheelSpins;
+  var rotSpeed;
+  var bc = new createjs.Shape(); //the bar chart shape
+  var bcColors = [];
+  var bcData = [];
+
   function init(){
     console.clear();
     stage = new createjs.Stage("mainCanvas");
     stage.enableMouseOver();
-    statusText = new createjs.Text("Φόρτωση...", "20px Arial", "white");
-    statusText.textAlign = "center";
-    statusText.textBaseline = "middle";
-    stage.addChild(statusText);
-    resize();
+    
     // Resource preloading
     for (var i = 0; i < resourceNames.length; i++) {
 
@@ -85,7 +80,6 @@ function imgByName(name) {
 
 function queueFileLoad(event) {
   resourcesLoaded++;
-  statusText.text = "Φόρτωση " + parseInt(100*resourcesLoaded/resourceNames.length) + " %";
   stage.update();
   if (resourcesLoaded == resourceNames.length)
     queueComplete(event);
@@ -93,92 +87,41 @@ function queueFileLoad(event) {
 
 function queueComplete(event) {
   console.log("Finished loading resources");
-  bg = new createjs.Bitmap(imgByName("background"));
+  bg = new createjs.Shape();
+  bg.graphics.beginFill('white').drawRect(0,0,stage.canvas.width,stage.canvas.height);
   stage.addChild(bg);
   
-  var onMenuClick = [onMenuHelp, onMenuHome, onMenuPrevious, onMenuNext];
-  for (i = 0; i < 4; i++) {
-
-    menubar[i] = new createjs.Bitmap(resources[resourceNames.indexOf('bar_help')+i]);
+  var onMenuClick = [onMenuHome, onMenuHelp, onMenuAbout,];
+  for (i = 0; i < 3; i++) {
+    menubar[i] = new createjs.Bitmap(resources[resourceNames.indexOf("bar_home") + i]);
     menubar[i].addEventListener("click", onMenuClick[i]);
     menubar[i].addEventListener("mouseover", function(event) {
-        // Bring the target on top in its container, mostly for the rotation animation
-        event.target.parent.setChildIndex(event.target, event.target.parent.numChildren - 1);
-        event.target.scaleX = 1.2*event.target.savedscaleX;
-        event.target.scaleY = 1.2*event.target.savedscaleY;
-        stage.update();});
+      // Bring the target on top in its container, mostly for the rotation animation
+      event.target.parent.setChildIndex(event.target, event.target.parent.numChildren - 1);
+      event.target.scaleX = 1.2*event.target.savedscaleX;
+      event.target.scaleY = 1.2*event.target.savedscaleY;
+      stage.update();
+      });
     menubar[i].addEventListener("mouseout", function(event) {
-        event.target.scaleX = event.target.savedscaleX;
-        event.target.scaleY = event.target.savedscaleY;
-        stage.update();});
+      event.target.scaleX = event.target.savedscaleX;
+      event.target.scaleY = event.target.savedscaleY;
+      stage.update();
+      });
     stage.addChild(menubar[i]);
-    
+    wheelSpins = false;
   }
-  lvlText = new createjs.Text("1", "20px Arial", "white");
-  lvlText.textAlign = "center";
-  lvlText.textBaseline = "middle";
-  stage.addChild(lvlText);
 
-  //begin two boxes
-  boxl = new createjs.Shape();
-  stage.addChild(boxl);
-  contl = new createjs.Container();
-  stage.addChild(contl);
 
-  boxr = new createjs.Shape();
-  stage.addChild(boxr);
-  contr = new createjs.Container();
-  stage.addChild(contr);
-
-  spinningWheel = new createjs.Shape();
-  spinningWheel.addEventListener('click',function (){
-    var whatDoIWant = Math.floor(Math.random()*9);
-    var newAngle = 270+360+Math.floor(whatDoIWant)*45;
-    rotConfig = computeSpeed(newAngle);
-    rotSpeed = rotConfig['init'];
-    wheelSpins = true;
-  });
-  contl.addChild(spinningWheel);
-  triangleMark = new createjs.Shape();
-  contl.addChild(triangleMark);
-  contl.setChildIndex(contl.numChildren - 1);
-
+  wheelBase = new createjs.Bitmap(imgByName('wheelBase'));
+  stage.addChild(wheelBase);
+  wheelPointer = new createjs.Bitmap(imgByName('wheelPointer'));
+  stage.addChild(wheelPointer);
   stage.update();
-  initLevel(0);
   resize();
   window.addEventListener('resize', resize, false);
   createjs.Ticker.on("tick", tick);
 }
 
-function computeSpeed(angle){
-  var initSpeed = 30;
-  totalSteps = initSpeed*(initSpeed+1)/2;
-  var stretch = 1.0*angle/totalSteps;
-  return({'init':initSpeed,'stretch':stretch})
-}
-
-function initLevel(newLevel) {
-  /*Levels
-   *0 -> colors:        ['orange','lightgreen']
-   *  -> probabilities: [75,25]*/
-  level = newLevel;
-  levelColors = [['orange','lightgreen'],
-                 ['orange','lightgreen','aquamarine'],
-                 ['red','green','blue','yellow','pink','lightgreen','lightblue','magenta'],
-                ];
-  levelProbabilities = [[75,25],
-                        [33.33,33.33,33.34],
-                        [12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,],
-                ];
-  colors = levelColors[newLevel];
-  probabilities = levelProbabilities[newLevel];
-  chartData = [];
-  for (var i = 0; i<colors.length; i++){
-    chartData.push(0);
-  }
-  wheelSpins = false;
-  resize();
-}
 
 function resize() {
   // Resize the canvas element
@@ -190,121 +133,73 @@ function resize() {
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = stage.canvas.width / ratio;
   }
-  if (!menubar[0]) {
-    statusText.x = stage.canvas.width / 2;
-    statusText.y = stage.canvas.height / 2;
-    statusText.font = parseInt(stage.canvas.height/10) + "px Arial";
-    statusText.visible = true;
-    return;
-  }
-  else{
-    statusText.visible = false;
-  }
+  bg.graphics.beginFill('white').drawRect(0,0,stage.canvas.width,stage.canvas.height);
+  stage.addChild(bg);
 
 
-  var bbs = stage.canvas.height / 10;  // bar button size
-
+  bbs = stage.canvas.height / 10;  // bar button size
   var bbm = bbs / 5;  // bar button margin
   // TODO: local/global variables, eslint...
-  for (i = 0; i < 4; i++) {
+  for (i = 0; i < 3; i++) {
+    // Leave one space for the level
     menubar[i].scaleX = bbs / menubar[i].image.width;
     menubar[i].scaleY = bbs / menubar[i].image.height;
     menubar[i].regX = menubar[i].image.width / 2;
     menubar[i].regY = menubar[i].image.height / 2;
-    if (i < 3)
-      j = i;
-    else
-      j = i + 1;
-    menubar[i].x = (j + 1)*bbm + bbs/2 + j*bbs;
+    menubar[i].x = (i + 1)*bbm + bbs/2 + i*bbs;
     menubar[i].y = stage.canvas.height - bbm - bbs/2;
-    menubar[i].visible = true;
-    var g = new createjs.Shape();
-    g.graphics.beginFill('#000').drawRect(0,0,menubar[i].image.width*menubar[i].scaleX,menubar[i].image.height*menubar[i].scaleY);
-    menubar[i].hitArea = g;
     // These copies are used to preserve the original scale on mouseover
     menubar[i].savedscaleX = menubar[i].scaleX;
     menubar[i].savedscaleY = menubar[i].scaleY;
+   	stage.setChildIndex(menubar[i],stage.numChildren - 1); 
+  }
+  
+  margin = stage.canvas.height / 40;
+
+  wheelBase.scaleY = (stage.canvas.height - 3*margin - bbs)/wheelBase.image.height;
+  wheelBase.scaleX = wheelBase.scaleY;
+  wheelBase.regX = wheelBase.image.width / 2;
+  wheelBase.regY = wheelBase.image.height / 2;
+  wheelBase.x = stage.canvas.width / 4;
+  wheelBase.y = stage.canvas.height / 2 - bbs / 2;
+  wheelBase.on('click',function(){
+    wheelSpins = true;
+    rotSpeed = 8 + 4*Math.random();
+  })
+
+  wheelPointer.scaleY = (stage.canvas.height - 3*margin - bbs)/wheelBase.image.height;
+  wheelPointer.scaleX = wheelPointer.scaleY;
+  wheelPointer.regX = wheelPointer.image.width / 2;
+  wheelPointer.regY = wheelPointer.image.height / 2;
+  wheelPointer.x = stage.canvas.width / 4;
+  wheelPointer.y = stage.canvas.height / 2 - bbs / 2;
+
+  
+  leftBox.graphics.clear();
+  leftBox.graphics.setStrokeStyle(5).beginStroke('#fe1133').drawRoundRect(margin,margin,stage.canvas.width / 2 - 2 * margin, stage.canvas.height - bbs - 2*margin,margin).endStroke();
+  stage.addChild(leftBox);
+
+  rightBox.graphics.clear();
+  rightBox.graphics.beginFill('#fe1133').drawRoundRect(stage.canvas.width / 2 + margin,margin,stage.canvas.width / 2 - 2 * margin, stage.canvas.height - bbs - 2*margin,margin);
+  stage.addChild(rightBox);
+  stage.addChild(wheelBase);
+
+  colors = ['red','green','blue','yellow','pink','lightgreen','lightblue','magenta'];
+  wheelColors = colors.slice();
+  probabilities = [12.5,12.5,12.5,12.5,12.5,12.5,12.5,12.5,];
+  
+  drawSpinningWheel();
+  for (var i =0; i < colors.length; i++){
+    stage.addChild(spinningWheel[i]);  
   }
 
-
-  lvlText.text = level + 1;
-  lvlText.x = (3 + 1)*bbm + bbs/2 + 3*bbs;
-  lvlText.y = stage.canvas.height - bbm/2 - bbs/2;
-  lvlText.font = parseInt(2*bbs/2) + "px Arial";
-
-  // If level is single digit, move lvlText and bar_previous a bit left
-  if (level + 1 < 10) {
-    lvlText.x -= bbs/4;
-    menubar[3].x -= bbs/2;
-  }
-
-
-  // Fill all the canvas with the background
-  bg.scaleX = stage.canvas.width / bg.image.width;
-  bg.scaleY = stage.canvas.height / bg.image.height;
-
-
-
-  //begin boxes
-  margin = stage.canvas.width/100;
-  var x_available = stage.canvas.width - (5*margin+margin+5*margin);
-  boxWidth = x_available/2;
-  boxHeight = stage.canvas.height - bbs - bbm - margin;
-  boxl.x = 5*margin;
-  boxl.y = margin;
-  boxl.alpha = 0.5;
-  boxl.graphics.clear();
-  boxl.graphics.beginStroke("#000");
-  boxl.graphics.setStrokeStyle(1);
-  boxl.graphics.beginFill("DarkTurquoise").drawRoundRect(0, 0, boxWidth, 
-    boxHeight, margin);
-  contl.x = boxl.x + margin;
-  contl.y = boxl.y + margin;
- 
-  boxr.x = 5*margin+x_available/2+margin;
-  boxr.y = margin;
-  boxr.alpha = 0.5;
-  boxr.graphics.clear();
-  boxr.graphics.beginStroke("#000");
-  boxr.graphics.setStrokeStyle(1);
-  boxr.graphics.beginFill("OrangeRed").drawRoundRect(0, 0 , boxWidth, boxHeight, margin);
-  contl.x = boxl.x + margin;
-  contl.y = boxl.y + margin;
- 
-  spinningWheel.x = boxWidth/2 - margin;
-  spinningWheel.y = boxHeight/2 - 2*margin;
-  //colors and probabilities are set in initLevel
-  drawSpinningWheel(boxWidth/2-2*margin,colors,probabilities);
-  drawChart();
-  triangleMark.graphics.clear();
-  triangleMark.x = spinningWheel.x;
-  triangleMark.y = contl.y - margin;
-  triangleMark.graphics.beginStroke('black').beginFill('black').moveTo(-margin,0).lineTo(margin,0).lineTo(0,margin).lineTo(-margin,0).closePath();
+  stage.addChild(wheelPointer);//pointer is on top of circle
   stage.update();
 }
-
-
-function drawSpinningWheel(r,colors,probabilities){
-  var startAngle = 0;
-  var endAngle = 0;
-  spinningWheel.graphics.clear();
-  spinningWheel.rotation = 270;//turns wheel towards triangle
-  /*spinningWheel.graphics.beginFill('black').arc(0,0,r,0,2*Math.PI*2/100);
-  spinningWheel.graphics.lt(0,0);*/
-  
-  for (var i = 0; i<colors.length; i++){
-    endAngle = startAngle + 2*Math.PI*probabilities[i]/100;
-    spinningWheel.graphics.beginFill(colors[i]).arc(0,0,r,startAngle,endAngle);
-    spinningWheel.graphics.lt(0,0);
-    startAngle = endAngle; //for next arc
-  }
-}
-
-
 
 
 function onMenuHelp(event) {
-  alert("Γυρίστε τον τροχό της τύχης και μετρήστε τα αποτελέσματα.");
+  alert("Κάντε κλικ στον τροχό για να αλλάξετε τα χρώματά του και κάντε κλικ στην βάση του για να τον περιστρέψετε.");
 }
 
 function onMenuHome(event) {
@@ -312,67 +207,106 @@ function onMenuHome(event) {
 }
 
 
-function colorIndex(){
-  var nextDegree = 0;
-  var adjustedRotation =  270 - spinningWheel.rotation%360;
-  if (adjustedRotation < 0){
-    adjustedRotation+=360;
-  }
-  
-  for (var i=0; i<colors.length; i++){
-    nextDegree += probabilities[i]*360/100;
-    if (adjustedRotation<nextDegree){
-      return(i);
-    }
-  }
-}
-function drawChart(){
-  for (var i=0; i<rectangles.length; i++){
-      for (var j=0; j<rectangles[i].length; j++){
-        rectangles[i][j].graphics.clear();
-    }
-  }
-  stage.update();
-  rectangles = [];
-  for (var i=0; i<colors.length; i++){
-    rectangles.push([]);
-    for (var j=0; j<chartData[i]; j++){
-      rectangles[i][j] = new createjs.Shape();
-      contr.addChild(rectangles[i][j]);
-      var rectWidth = (boxWidth-1*(colors.length+1)-2*margin)/colors.length;
-      var rectHeight = boxHeight/15 - 15;
-      var rectX = boxr.x+margin+i*(rectWidth+1);
-      var rectY = boxr.y+boxHeight - (j+1)*(rectHeight+1);
-      rectangles[i][j].graphics.beginFill(colors[i]).drawRoundRect(rectX,rectY,rectWidth,rectHeight,2);
-    }
-  }
-  stage.update();
+function onMenuAbout(event) {
+  window.open("credits/index_DS_II.html");
 }
 
-function tick(){
+
+function tick(event){
   if (wheelSpins){
-    rotSpeed -= 1;
-    spinningWheel.rotation = spinningWheel.rotation+rotSpeed*rotConfig['stretch'];
-    if (rotSpeed < 0.1){
+    if (rotSpeed < 0.01){
       wheelSpins = false;
-      var ci = colorIndex();
-      chartData[ci] += 1;
-      drawChart();
+      //wheel stops this means we have to draw the chart
+      
+      //if it is the first spin the bcColors must be 
+      //computed
+      if (bcColors.length == 0){//first spin
+            for (var i=0; i<wheelColors.length; i++){
+              if (bcColors.indexOf(wheelColors[i])<0){//if not already in bcColors
+                bcColors.push(wheelColors[i]);
+              }
+            }
+            for (var i=0; i<bcColors.length; i++){
+              bcData[i] = 0;
+            }
+          }
+
+      //find the color of the wheel and add it to data
+      for (var i=0; i<colors.length; i++){
+        //from https://www.createjs.com/tutorials/HitTest/globalToLocal.html
+        var pt = spinningWheel[i].globalToLocal(stage.canvas.width / 4, stage.canvas.height / 4);
+        if (spinningWheel[i].hitTest(pt.x,pt.y)){
+          var spinColor = spinningWheel[i].arcColor;
+          bcData[bcColors.indexOf(spinColor)] += 1;
+          if (bcData[bcColors.indexOf(spinColor)] > 10){
+            bcData[bcColors.indexOf(spinColor)] = 10;
+          }
+        }
+      }
+
+      //draw the new graph
+      console.log(bcColors,bcData);
+      bc.graphics.clear();
+      bc.graphics.setStrokeStyle(2).beginStroke('black');
+      for (var i=0; i<bcColors.length; i++){
+        var l = bcColors.length;
+        var barWidth = (stage.canvas.width / 2 - 2 * margin)/l;
+        var barHeight = (stage.canvas.height - bbs - 2*margin) / 10;
+        for (var j=0; j<bcData[i]; j++){
+          bc.graphics.beginFill(bcColors[i]).drawRect(stage.canvas.width / 2 + margin + i*barWidth, margin + (9-j)*barHeight, barWidth, barHeight);
+        }
+      }
+      bc.graphics.endStroke();
+      stage.addChild(bc);
+      stage.update();
     }
+    else{    
+      rotSpeed -= 0.1;
+      for (var i=0; i<colors.length; i++){
+        spinningWheel[i].rotation += rotSpeed;
+      }
+      stage.update();
+    }
+  }//if it does not spin no problem
+}
+
+function drawSpinningWheel(){
+  var startAngle = 0;
+  var endAngle = 0;
+  r = stage.canvas.height * 0.35;
+  for (var i = 0; i<colors.length; i++){
+    if (spinningWheel[i]){
+      spinningWheel[i].graphics.clear();
+    }
+    else{
+      spinningWheel[i] = new createjs.Shape();
+      spinningWheel[i].ind = i;
+    }
+    spinningWheel[i].x = stage.canvas.width / 4;
+    spinningWheel[i].y = stage.canvas.height * 0.4;    
+    endAngle = startAngle + 2*Math.PI*probabilities[i]/100;
+    spinningWheel[i].startAngle = startAngle;
+    spinningWheel[i].endAngle = endAngle;
+    spinningWheel[i].arcColor = wheelColors[i];
+    spinningWheel[i].graphics.setStrokeStyle(2).beginStroke(spinningWheel[i].arcColor).beginFill(spinningWheel[i].arcColor).arc(0,0,r,spinningWheel[i].startAngle,spinningWheel[i].endAngle);
+    spinningWheel[i].graphics.lt(0,0).endStroke();
+    spinningWheel[i].on('click',function(event){
+      bcColors = [];
+      bc.graphics.clear();
+      wheelColors[event.target.ind] = colors[(colors.indexOf(event.target.arcColor) + 1) % colors.length];
+      event.target.arcColor = wheelColors[event.target.ind];
+      event.target.graphics.setStrokeStyle(2).beginStroke(event.target.arcColor).beginFill(event.target.arcColor).arc(0,0,r,event.target.startAngle,event.target.endAngle);
+      event.target.graphics.lt(0,0).endStroke();
+      stage.addChild(event.target);//bring shape to front
+      stage.addChild(wheelPointer);
+      stage.update();
+      console.log(colors);
+    });
+    startAngle = endAngle; //for next arc
+
+    stage.addChild(spinningWheel[i]);
   }
   stage.update();
-}
-
-function onMenuHome(event) {
-  window.history.back();
-}
-
-function onMenuPrevious(event) {
-  initLevel((level+2) % 3);
-}
-
-function onMenuNext(event) {
-  initLevel((level+1) % 3);
 }
 
 </script>
