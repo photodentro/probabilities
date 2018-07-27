@@ -233,13 +233,14 @@ function tick(event){
       //find the color of the wheel and add it to data
       for (var i=0; i<colors.length; i++){
         //from https://www.createjs.com/tutorials/HitTest/globalToLocal.html
-        var pt = spinningWheel[i].globalToLocal(stage.canvas.width / 4, stage.canvas.height / 4);
+        var pt = spinningWheel[i].globalToLocal(stage.canvas.width / 4, stage.canvas.height / 8);
         if (spinningWheel[i].hitTest(pt.x,pt.y)){
           var spinColor = spinningWheel[i].arcColor;
           bcData[bcColors.indexOf(spinColor)] += 1;
           if (bcData[bcColors.indexOf(spinColor)] > 10){
             bcData[bcColors.indexOf(spinColor)] = 10;
           }
+          break;
         }
       }
 
