@@ -178,7 +178,7 @@ function resize() {
   stage.addChild(leftBox);
 
   rightBox.graphics.clear();
-  rightBox.graphics.beginFill('#fe1133').drawRoundRect(stage.canvas.width / 2 + margin,margin,stage.canvas.width / 2 - 2 * margin, stage.canvas.height - bbs - 2*margin,margin);
+  rightBox.graphics.setStrokeStyle(5).beginStroke('#fe1133').drawRoundRect(stage.canvas.width / 2 + margin,margin,stage.canvas.width / 2 - 2 * margin, stage.canvas.height - bbs - 2*margin,margin);
   stage.addChild(rightBox);
   stage.addChild(wheelBase);
 
@@ -301,10 +301,10 @@ function drawGraph(){
       bc.graphics.setStrokeStyle(2).beginStroke('black');
       for (var i=0; i<bcColors.length; i++){
         var l = bcColors.length;
-        var barWidth = (stage.canvas.width / 2 - 2 * margin)/l;
-        var barHeight = (stage.canvas.height - bbs - 2*margin) / 10;
+        var barWidth = (stage.canvas.width / 2 - 4 * margin)/l;
+        var barHeight = (stage.canvas.height - bbs - 2 * margin) / 10;
         for (var j=0; j<bcData[i]; j++){
-          bc.graphics.beginFill(bcColors[i]).drawRect(stage.canvas.width / 2 + margin + i*barWidth, margin + (9-j)*barHeight, barWidth, barHeight);
+          bc.graphics.beginFill(bcColors[i]).drawRect(stage.canvas.width / 2 + 2*margin + i*barWidth, margin + (9-j)*barHeight, barWidth, barHeight);
         }
       }
       bc.graphics.endStroke();
