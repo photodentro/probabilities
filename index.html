@@ -174,11 +174,11 @@ function resize() {
 
   
   leftBox.graphics.clear();
-  leftBox.graphics.setStrokeStyle(5).beginStroke('#fe1133').drawRoundRect(margin,margin,stage.canvas.width / 2 - 2 * margin, stage.canvas.height - bbs - 2*margin,margin).endStroke();
+  leftBox.graphics.setStrokeStyle(margin/3).beginStroke('#fe1133').drawRoundRect(margin,margin,stage.canvas.width / 2 - 2 * margin, stage.canvas.height - bbs - 2*margin,margin).endStroke();
   stage.addChild(leftBox);
 
   rightBox.graphics.clear();
-  rightBox.graphics.setStrokeStyle(5).beginStroke('#fe1133').drawRoundRect(stage.canvas.width / 2 + margin,margin,stage.canvas.width / 2 - 2 * margin, stage.canvas.height - bbs - 2*margin,margin);
+  rightBox.graphics.setStrokeStyle(margin/3).beginStroke('#fe1133').drawRoundRect(stage.canvas.width / 2 + margin,margin,stage.canvas.width / 2 - 2 * margin, stage.canvas.height - bbs - 2*margin,margin);
   stage.addChild(rightBox);
   stage.addChild(wheelBase);
 
@@ -298,13 +298,13 @@ function drawSpinningWheel(){
 
 function drawGraph(){
 	  bc.graphics.clear();
-      bc.graphics.setStrokeStyle(2).beginStroke('black');
+      bc.graphics.setStrokeStyle(margin/5).beginStroke('black');
       for (var i=0; i<bcColors.length; i++){
         var l = bcColors.length;
         var barWidth = (stage.canvas.width / 2 - 4 * margin)/l;
         var barHeight = (stage.canvas.height - bbs - 2 * margin) / 10;
         for (var j=0; j<bcData[i]; j++){
-          bc.graphics.beginFill(bcColors[i]).drawRect(stage.canvas.width / 2 + 2*margin + i*barWidth, margin + (9-j)*barHeight, barWidth, barHeight);
+          bc.graphics.beginFill(bcColors[i]).drawRoundRect(stage.canvas.width / 2 + 2*margin + i*barWidth, margin + (9-j)*barHeight, barWidth, barHeight, margin/5);
         }
       }
       bc.graphics.endStroke();
