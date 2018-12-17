@@ -1,1 +1,0 @@
-<a href='https://www.freepik.com/free-vector/painting-icons-flat_1530520.htm'>Designed by Freepik</a>
