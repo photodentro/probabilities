@@ -197,7 +197,6 @@ function queueFileLoad(event) {
 function queueComplete(event) {
   console.log("Finished loading resources");
   bg = new createjs.Shape();
-  bg.graphics.beginFill('#9932CC').drawRect(0,0,stage.canvas.width,stage.canvas.height);
   stage.addChild(bg);
 
   var onMenuClick = [onMenuHome, onMenuHelp, onMenuAbout, onMenuPrevious, onMenuNext];
@@ -265,7 +264,7 @@ function resize() {
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = stage.canvas.width / ratio;
   }
-  bg.graphics.beginFill('#9932CC').drawRect(0,0,stage.canvas.width,stage.canvas.height);
+  bg.graphics.beginFill('#AAAAAA').drawRect(0,0,stage.canvas.width,stage.canvas.height);
   stage.addChild(bg);
 
 
