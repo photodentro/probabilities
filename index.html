@@ -276,7 +276,7 @@ function resize() {
     if (i < 4)
       j = i;
     else
-      j = i + 1;
+      j = i + 0.5;
     menubar[i].scaleX = bbs / menubar[i].image.width;
     menubar[i].scaleY = bbs / menubar[i].image.height;
     menubar[i].regX = menubar[i].image.width / 2;
@@ -290,8 +290,8 @@ function resize() {
   }
 
   lvlText.text = currentLevel + 1;
-  lvlText.x = (4 + 1)*bbm + bbs/2 + 4*bbs;
-  lvlText.y = stage.canvas.height - bbm/2 - bbs/2;
+  lvlText.x = 0.295*stage.canvas.width;
+  lvlText.y = 0.935*stage.canvas.height ;
   lvlText.font = parseInt(2*bbs/2) + "px Arial";
   stage.addChild(lvlText);
   margin = stage.canvas.height / 40;
@@ -335,7 +335,7 @@ function resize() {
 
 
 function onMenuHelp(event) {
-  alert("Κάντε κλικ στο κουμπί περιστροφής και δείτε σε ραβδόγραμμα τα αποτελέσματα. Μπορείτε να αλλάξετε τα χρώματα του τροχού κάνοντας κλικ πάνω τους. Τα επίπεδα καθορίζουν το πλήθος των χρωμάτων του τροχού.");
+  alert("Επέλεξε και συμπλήρωσε τον καιρό στο αντίστοιχο κελί για την κάθε ημέρα. Στη συνέχεια παρατήρησε το ραβδόγραμμα στο φύλλο δεξιά στην οθόνη σου και προσπάθησε να κάνεις υποθέσεις για τον καιρό της επόμενης εβδομάδας.");
 }
 
 function onMenuHome(event) {
