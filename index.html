@@ -65,6 +65,7 @@
   var spinWheel;
   var theHelpBox;
   var theHelpText;
+  var statusText;
 
   function theHelp_hide(){
       theHelpBox.visible = false;
@@ -216,6 +217,10 @@ function init(){
     console.clear();
     stage = new createjs.Stage("mainCanvas");
     stage.enableMouseOver();
+    statusText = new createjs.Text("Φόρτωση...", "20px Arial", "white");
+    statusText.textAlign = "center";
+    statusText.textBaseline = "middle";
+    stage.addChild(statusText);
 
     // Resource preloading
     for (var i = 0; i < resourceNames.length; i++) {
@@ -233,6 +238,7 @@ function imgByName(name) {
 
 function queueFileLoad(event) {
   resourcesLoaded++;
+  statusText.text = "Φόρτωση " + parseInt(100*resourcesLoaded/resourceNames.length) + " %";  
   stage.update();
   if (resourcesLoaded == resourceNames.length)
     queueComplete(event);
@@ -242,7 +248,7 @@ function queueComplete(event) {
   console.log("Finished loading resources");
   bg = new createjs.Shape();
   stage.addChild(bg);
-
+  statusText.visible = false;
   var onMenuClick = [onMenuHome, onMenuHelp, onMenuAbout, onMenuPrevious, onMenuNext];
   for (i = 0; i < 5; i++) {
     menubar[i] = new createjs.Bitmap(resources[resourceNames.indexOf("bar_home") + i]);
@@ -311,6 +317,14 @@ function resize() {
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = stage.canvas.width / ratio;
   }
+  if (!menubar[2]) {
+    statusText.x = stage.canvas.width / 2;
+    statusText.y = stage.canvas.height / 2;
+    statusText.font = parseInt(stage.canvas.height/10) + "px Arial";
+    return;
+  }
+
+
   bg.graphics.beginFill('#bbbbbb').drawRect(0,0,stage.canvas.width,stage.canvas.height);
   stage.addChild(bg);
 
