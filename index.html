@@ -31,6 +31,7 @@
   <canvas id="mainCanvas" width="320" height="180">
     Your browser doesn't support HTML5!
   </canvas>
+  <audio id="audiohelp"><source src="resource/help.mp3" type="audio/mp3"></audio>
 <script>
   var stage;
   var resourceNames = ['bar_home', 'bar_help', 'bar_about', 'bar_previous','bar_next','wheelBase', 'spinButton', 'restartButton','background'];
@@ -62,6 +63,49 @@
   var levels = 3;
   var lvlColors = [2,4,8];
   var spinWheel;
+  var theHelpBox;
+  var theHelpText;
+
+  function theHelp_hide(){
+      theHelpBox.visible = false;
+      theHelpText.visible = false;
+      stage.update();
+      document.getElementById('audiohelp').pause();
+  }
+  function theHelpConst(msg){
+    this.create = function(){
+      theHelpBox = new createjs.Shape();
+      theHelpBox.on("click",function(){
+        theHelp_hide();
+      });
+      theHelpText = new createjs.Text();
+      theHelpText.text = msg;
+    }
+    this.resize = function(){
+        theHelpBox.graphics.clear();
+        theHelpBox.x = 0.25*stage.canvas.width;
+        theHelpBox.y = 0.25*stage.canvas.height;
+        theHelpBox.graphics.beginFill('#ffffff').setStrokeStyle(2).beginStroke('#000000').drawRoundRect(0,0,stage.canvas.width/2,stage.canvas.height/2,stage.canvas.height/20);
+        theHelpBox.shadow = new createjs.Shadow("#000000", 5, 5, 10);
+        stage.addChild(theHelpBox);
+        theHelpText.x = theHelpBox.x + stage.canvas.width/20;
+        theHelpText.y = theHelpBox.y + stage.canvas.width/40;
+        theHelpText.font = parseInt(stage.canvas.height/22) + "px serif";
+        theHelpText.lineWidth = stage.canvas.width/2.3;
+        stage.addChild(theHelpText);
+    }
+    this.show = function(){
+      stage.addChild(theHelpBox);
+      stage.addChild(theHelpText);
+      theHelpBox.visible = true;
+      theHelpText.visible = true;
+      document.getElementById('audiohelp').currentTime = 0;
+      document.getElementById('audiohelp').play();
+      stage.update();
+
+    }
+    this.hide = theHelp_hide;
+  }
 
 
 function nextColor(cl,co){
@@ -237,6 +281,9 @@ function queueComplete(event) {
   	spinWheel.rotate();
   });
   stage.addChild(wheelBase);
+  theHelp = new theHelpConst("Κάνε κλικ στο κουμπί της περιστροφής και προσπάθησε να μαντέψεις ποιο χρώμα θα τύχει. \nΜην ξεχνάς να παρατηρείς τα αποτελέσματα των πειραμάτων της τύχης που εμφανίζονται στο κουτί δεξιά. \nΤέλος, αν θέλεις να αλλάξεις τα χρώματα που εμφανίζονται στον τροχό της τύχης, απλά κάνε κλικ πάνω τους.")
+  theHelp.create();
+  theHelp.hide();
 
   initLevel(0);
   resize();
@@ -264,7 +311,7 @@ function resize() {
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = stage.canvas.width / ratio;
   }
-  bg.graphics.beginFill('#AAAAAA').drawRect(0,0,stage.canvas.width,stage.canvas.height);
+  bg.graphics.beginFill('#bbbbbb').drawRect(0,0,stage.canvas.width,stage.canvas.height);
   stage.addChild(bg);
 
 
@@ -330,12 +377,13 @@ function resize() {
   stage.addChild(rightBox);
   spinWheel.resize();
   spinWheel.draw();
+  theHelp.resize();
   stage.update();
 }
 
 
 function onMenuHelp(event) {
-  alert("Επέλεξε και συμπλήρωσε τον καιρό στο αντίστοιχο κελί για την κάθε ημέρα. Στη συνέχεια παρατήρησε το ραβδόγραμμα στο φύλλο δεξιά στην οθόνη σου και προσπάθησε να κάνεις υποθέσεις για τον καιρό της επόμενης εβδομάδας.");
+  theHelp.show();
 }
 
 function onMenuHome(event) {
