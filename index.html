@@ -220,8 +220,6 @@ function init(){
     statusText = new createjs.Text("Φόρτωση...", "20px Arial", "white");
     statusText.textAlign = "center";
     statusText.textBaseline = "middle";
-    stage.addChild(statusText);
-
     // Resource preloading
     for (var i = 0; i < resourceNames.length; i++) {
       resources[i] = new Image();
@@ -239,6 +237,7 @@ function imgByName(name) {
 function queueFileLoad(event) {
   resourcesLoaded++;
   statusText.text = "Φόρτωση " + parseInt(100*resourcesLoaded/resourceNames.length) + " %";  
+  stage.addChild(statusText);
   stage.update();
   if (resourcesLoaded == resourceNames.length)
     queueComplete(event);
